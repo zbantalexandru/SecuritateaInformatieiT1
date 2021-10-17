@@ -57,11 +57,6 @@
     <property name="settings.editor.selected.configurable" value="vcs.Git" />
   </component>
   <component name="RunManager">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="T1" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="T1" TARGET_NAME="T1" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="T1" RUN_TARGET_NAME="T1">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -81,7 +76,11 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1634395158086</updated>
-      <workItem from="1634395160019" duration="17747000" />
+      <workItem from="1634395160019" duration="17935000" />
+      <workItem from="1634421704972" duration="168000" />
+      <workItem from="1634421899267" duration="681000" />
+      <workItem from="1634422703735" duration="132000" />
+      <workItem from="1634459212739" duration="4561000" />
     </task>
     <servers />
   </component>

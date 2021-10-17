@@ -13,31 +13,6 @@ void randChar(unsigned char in[], int length) {
     }
 }
 
-void generateKeyCBC(unsigned char enc_out[], unsigned char iv_enc[AES_BLOCK_SIZE]) {
-
-    unsigned char aes_key[16] = "ahFjQbtZUOmNdaJ";
-
-    unsigned char aes_input[25];
-    randChar(aes_input, 25);
-    printf("\n\nAcesta este mesajul criptat!: %s\n\n", aes_input);
-
-    AES_KEY enc_key;
-    AES_set_encrypt_key(aes_key, 128, &enc_key);
-    AES_cbc_encrypt(aes_input, enc_out, 25, &enc_key, iv_enc, AES_ENCRYPT);
-}
-
-void decriptKeyCBC(unsigned char enc_text[], unsigned char dec_text[], unsigned char iv_dec[AES_BLOCK_SIZE]) {
-    unsigned char aes_key[16] = "ahFjQbtZUOmNdaJ";
-
-    unsigned char dec_out[25];
-    memset(dec_out, 0, sizeof(dec_out));
-    AES_KEY dec_key;
-
-    AES_set_decrypt_key(aes_key, 128, &dec_key);
-    AES_cbc_encrypt(enc_text, dec_text, 25, &dec_key, iv_dec, AES_DECRYPT);
-
-}
-
 //a simple hex-print routine. could be modified to print 16 bytes-per-line
 static void hex_print(const void *pv, size_t len) {
     const unsigned char *p = (const unsigned char *) pv;
@@ -51,6 +26,34 @@ static void hex_print(const void *pv, size_t len) {
     printf("\n");
 }
 
+void generateKeyCBC(unsigned char enc_out[], unsigned char iv_enc[AES_BLOCK_SIZE]) {
+
+    unsigned char aes_key[16] = "ahFjQbtZUOmNdaJ";
+
+    unsigned char aes_input[26];
+    randChar(aes_input, 25);
+    aes_input[25] = '\0';
+    printf("\n\nAcesta este mesajul criptat!: %s\n\n", aes_input);
+    fflush(stdout);
+
+    AES_KEY enc_key;
+    AES_set_encrypt_key(aes_key, 128, &enc_key);
+    AES_cbc_encrypt(aes_input, enc_out, strlen(reinterpret_cast<const char *>(aes_input)), &enc_key, iv_enc,
+                    AES_ENCRYPT);
+    hex_print(enc_out, strlen(reinterpret_cast<const char *>(enc_out)));
+    printf("%i",strlen(reinterpret_cast<const char *>(enc_out)));
+    fflush(stdout);
+}
+
+void decriptKeyCBC(unsigned char enc_text[], unsigned char dec_text[], unsigned char iv_dec[AES_BLOCK_SIZE]) {
+    unsigned char aes_key[16] = "ahFjQbtZUOmNdaJ";
+
+    hex_print(enc_text, strlen(reinterpret_cast<const char *>(enc_text)));
+    AES_KEY dec_key;
+
+    AES_set_decrypt_key(aes_key, 128, &dec_key);
+    AES_cbc_encrypt(enc_text, dec_text, strlen(reinterpret_cast<const char *>(enc_text)), &dec_key, iv_dec, AES_DECRYPT);
+}
 
 int main() {
     pid_t pidA, pidB;
@@ -66,16 +69,19 @@ int main() {
     pidA = fork();
     if (pidA == 0) {//A
         char msg[50] = "cbc";//mesaj spre B
-        unsigned char encKey[25], knownKey[] = "Lorem Ipsum is", decriptedCode[26];
+        unsigned char encKey[1000], knownKey[AES_BLOCK_SIZE] = "Lorem Ipsum is", decriptedCode[26];
+        sleep(2);
         write(pipeAB[1], msg, strlen(msg));
-        read(pipeA[0], encKey, 25);
-        write(pipeAB[1], encKey, sizeof(encKey));
-
+        read(pipeA[0], encKey, 1000);
         if (strcmp(msg, "cbc") == 0) {
             decriptKeyCBC(encKey, decriptedCode, knownKey);
             decriptedCode[25] = '\0';
-            printf("\nA: %s %i\n", decriptedCode,sizeof (decriptedCode));
+            printf("\nA: %s\n", decriptedCode);
+            fflush(stdout);
+        } else if (strcmp(msg, "ecb") == 0) {
+            //caz ecb!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
+        write(pipeAB[1], encKey, sizeof(encKey));
     }//A
     else {
         if (pipe(pipeB) == -1) {
@@ -85,8 +91,8 @@ int main() {
         pidB = fork();
         if (pidB == 0) {//B
             char msg[50];
-            sleep(1);
             read(pipeAB[0], msg, 50);
+            msg[3] = '\0';
             for (int i = 0; i < strlen(msg); i++)
                 if (msg[i] >= 'A' && msg[i] <= 'Z') {
                     msg[i] -= 'A';
@@ -98,38 +104,30 @@ int main() {
             } else if (strcmp(msg, "ecb") == 0) {
                 //ecb
                 write(pipeB[1], msg, strlen(msg));
-            } else {
-                printf("Nu am idee la ce te gandesti, am sa folosesc CBC");
-                write(pipeB[1], "cbc", 3);
             }
-            unsigned char encKey[50], knownKey[] = "Lorem Ipsum is", decriptedCode[26];
-            read(pipeAB[0], encKey, 25);
+            unsigned char encKey[1000], knownKey[AES_BLOCK_SIZE] = "Lorem Ipsum is", decriptedCode[26];
+            read(pipeAB[0], encKey, 1000);
             if (strcmp(msg, "cbc") == 0) {
                 decriptKeyCBC(encKey, decriptedCode, knownKey);
                 decriptedCode[25] = '\0';
                 printf("\nB: %s\n", decriptedCode);
+                fflush(stdout);
+            } else if (strcmp(msg, "ecb") == 0) {
+                //caz ecb!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             }
         }//B
         else {//KM
             char tipEnc[50];
             read(pipeB[0], tipEnc, 50);
             if (strcmp(tipEnc, "cbc") == 0) {
-                unsigned char encKey[25];//k
+                unsigned char encKey[1000];//k
                 unsigned char inputKey[] = "Lorem Ipsum is";//k'
                 generateKeyCBC(encKey, inputKey);
                 write(pipeA[1], encKey, sizeof(encKey));
             }
-
             sleep(5);
         }//KM
     }
     return 0;
 }
-
-
-
-
-// main entrypoint
-
-
 //gcc main.cpp -o a.out -lssl -lcrypto
